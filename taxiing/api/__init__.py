@@ -18,4 +18,5 @@ def blueprint():
         bp.route('/v2/collections/<collection>/', methods=['GET'], feeds=True, read_write=False)(get_collection)
         bp.route('/v2/', methods=['GET'], feeds=True, read_write=False)(get_taxii2_server)
         bp.route('/v2/collections/<collection>/objects/', methods=['GET'], feeds=True, read_write=False)(get_collection_objects)
+
     return bp

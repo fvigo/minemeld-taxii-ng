@@ -24,7 +24,8 @@ from netaddr import IPRange, AddrFormatError
 from minemeld.flask.redisclient import SR
 from minemeld.flask.logger import LOG
 
-from taxiing.stix.v2 import encode
+import taxiing.stix.v2 as stix2
+
 from .utils import get_ioc_property
 
 
@@ -97,7 +98,7 @@ def stix2_bundle_formatter(feedname):
 
             for i in xindicators:
                 try:
-                    converted = encode(i, v, feedname)
+                    converted = stix2.encode(i, v, feedname)
                 except RuntimeError:
                     LOG.error('Error converting {!r} to STIX2'.format(i))
                     continue
