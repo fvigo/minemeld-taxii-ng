@@ -42,24 +42,28 @@ def translate_ip_ranges(indicator):
     return [str(x) if x.size != 1 else str(x.network) for x in ip_range.cidrs()]
 
 
-def stix2_bundle_formatter(feedname, objectid=''):
+def response_formatter(feedname, objectid='', manifest=False):
     authz_property = get_ioc_property(feedname)
 
-    bundle_id = str(uuid.uuid3(
-        uuid.NAMESPACE_URL,
-        ('minemeld/{}/{}'.format(feedname, 0)).encode('ascii', 'ignore')
-    ))
-
-    last_entry = SR.zrange(feedname, -1, -1, withscores=True)
-    LOG.debug(last_entry)
-    if len(last_entry) != 0:
-        _, score = last_entry[0]
+    if not manifest:
         bundle_id = str(uuid.uuid3(
             uuid.NAMESPACE_URL,
-            ('minemeld/{}/{}'.format(feedname, score)).encode('ascii', 'ignore')
+            ('minemeld/{}/{}'.format(feedname, 0)).encode('ascii', 'ignore')
         ))
 
-    yield '{{\n"type": "bundle",\n"spec_version": "2.0",\n"id": "bundle--{}",\n"indicators": [\n'.format(bundle_id)
+        last_entry = SR.zrange(feedname, -1, -1, withscores=True)
+        LOG.debug(last_entry)
+        if len(last_entry) != 0:
+            _, score = last_entry[0]
+            bundle_id = str(uuid.uuid3(
+                uuid.NAMESPACE_URL,
+                ('minemeld/{}/{}'.format(feedname, score)).encode('ascii', 'ignore')
+            ))
+
+        yield '{{\n"type": "bundle",\n"spec_version": "2.0",\n"id": "bundle--{}",\n"indicators": [\n'.format(bundle_id)
+
+    else:
+        yield '{\n"objects": [\n'
 
     start = 0
     num = (1 << 32) - 1
@@ -102,13 +106,17 @@ def stix2_bundle_formatter(feedname, objectid=''):
                 except RuntimeError:
                     LOG.error('Error converting {!r} to STIX2'.format(i))
                     continue
-                if objectid and converted['id'] != objectid:
-                    # skip indicators that don't match the provided id
-                    continue
 
-                created_by_ref = converted.pop('_created_by_ref', None)
-                if created_by_ref is not None:
-                    converted['created_by_ref'] = 'identity--'+str(identities[created_by_ref])
+                if not manifest:
+                    if objectid and converted['id'] != objectid:
+                        # skip indicators that don't match the provided id
+                        continue
+
+                    created_by_ref = converted.pop('_created_by_ref', None)
+                    if created_by_ref is not None:
+                        converted['created_by_ref'] = 'identity--'+str(identities[created_by_ref])
+                else:
+                    converted = dict(id= converted['id'])
 
                 if not firstelement:
                     result.write(',')
@@ -125,25 +133,26 @@ def stix2_bundle_formatter(feedname, objectid=''):
 
         cstart += 100
 
-    # dump identities
-    result = cStringIO.StringIO()
-    for identity, uuid_ in identities.iteritems():
-        identity_class, name = identity.split(':', 1)
-        result.write(',')
-        result.write(json.dumps({
-            'type': 'identty',
-            'id': 'identity--'+str(uuid_),
-            'name': name,
-            'identity_class': identity_class
-        }))
-    yield result.getvalue()
-    result.close()
+    if not manifest:
+        # dump identities
+        result = cStringIO.StringIO()
+        for identity, uuid_ in identities.iteritems():
+            identity_class, name = identity.split(':', 1)
+            result.write(',')
+            result.write(json.dumps({
+                'type': 'identty',
+                'id': 'identity--'+str(uuid_),
+                'name': name,
+                'identity_class': identity_class
+            }))
+        yield result.getvalue()
+        result.close()
 
     yield ']\n}'
 
 
-def generate_stix2_bundle(feedname, objectid=''):
+def generate_taxii2_collection(feedname, objectid='', manifest=False):
     return Response(
-        stream_with_context(stix2_bundle_formatter(feedname, objectid='')),
+        stream_with_context(response_formatter(feedname, objectid, manifest)),
         mimetype='application/vnd.oasis.stix+json; version=2.0'
     )

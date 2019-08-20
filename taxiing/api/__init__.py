@@ -10,7 +10,7 @@ def blueprint():
             '/v1/poll', methods=['POST'], feeds=True, read_write=False
         )(poll)
 
-    if config.get('TAXIING_ENABLE_TAXII2_STIC2_POLL', False):
+    if config.get('TAXIING_ENABLE_TAXII2_STIX2_POLL', False):
         from .v2 import get_apiroot, get_collection, get_collections, get_taxii2_server, get_collection_objects, get_collection_object
 
         bp.route('/v2/', methods=['GET'], feeds=True, read_write=False)(get_taxii2_server)
@@ -18,5 +18,5 @@ def blueprint():
         bp.route('/v2/api/collections/', methods=['GET'], feeds=True, read_write=False)(get_collections)
         bp.route('/v2/api/collections/<collection>/', methods=['GET'], feeds=True, read_write=False)(get_collection)
         bp.route('/v2/api/collections/<collection>/objects/', methods=['GET'], feeds=True, read_write=False)(get_collection_objects)
-        bp.route('/v2/api/collections/<collection>/objects/<object>/', methods=['GET'], feeds=True, read_write=False)(get_collection_object)
+        bp.route('/v2/api/collections/<collection>/objects/<objectid>/', methods=['GET'], feeds=True, read_write=False)(get_collection_object)
     return bp
