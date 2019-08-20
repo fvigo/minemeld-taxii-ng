@@ -152,7 +152,12 @@ def response_formatter(feedname, objectid='', manifest=False):
 
 
 def generate_taxii2_collection(feedname, objectid='', manifest=False):
+    if manifest:
+        _mimetype='application/vnd.oasis.taxii+json; version=2.0'
+    else:
+        _mimetype='application/vnd.oasis.stix+json; version=2.0'
+
     return Response(
         stream_with_context(response_formatter(feedname, objectid, manifest)),
-        mimetype='application/vnd.oasis.stix+json; version=2.0'
+        mimetype=_mimetype
     )
