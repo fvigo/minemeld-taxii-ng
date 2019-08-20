@@ -117,7 +117,7 @@ def _to_stix2_timestamp(dt):
     return result
 
 
-def encode(indicator, value, feedname=''):
+def encode(indicator, value):
     type_ = value.get('type', None)
     if type_ is None:
         raise RuntimeError('No type in indicator')

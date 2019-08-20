@@ -32,7 +32,8 @@ def get_taxii2_server():
     if authorized is None:
         return 'Unauthorized', 401
 
-    response = jsonify(title='MineMeld TAXII Server')
+    api_root = '{}/api/'.format(request.url_root)
+    response = jsonify(title='MineMeld TAXII Server', description='TAXII Server powered by MineMeld', default=api_root, api_roots=[api_root])
     response.headers['Content-Type'] = 'application/vnd.oasis.taxii+json; version=2.0'
     return response
 

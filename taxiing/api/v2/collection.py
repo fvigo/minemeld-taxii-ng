@@ -42,7 +42,7 @@ def translate_ip_ranges(indicator):
     return [str(x) if x.size != 1 else str(x.network) for x in ip_range.cidrs()]
 
 
-def stix2_bundle_formatter(feedname):
+def stix2_bundle_formatter(feedname, objectid=''):
     authz_property = get_ioc_property(feedname)
 
     bundle_id = str(uuid.uuid3(
@@ -98,9 +98,12 @@ def stix2_bundle_formatter(feedname):
 
             for i in xindicators:
                 try:
-                    converted = stix2.encode(i, v, feedname)
+                    converted = stix2.encode(i, v)
                 except RuntimeError:
                     LOG.error('Error converting {!r} to STIX2'.format(i))
+                    continue
+                if objectid and converted['id'] != objectid:
+                    # skip indicators that don't match the provided id
                     continue
 
                 created_by_ref = converted.pop('_created_by_ref', None)
@@ -139,8 +142,8 @@ def stix2_bundle_formatter(feedname):
     yield ']\n}'
 
 
-def generate_stix2_bundle(feedname):
+def generate_stix2_bundle(feedname, objectid=''):
     return Response(
-        stream_with_context(stix2_bundle_formatter(feedname)),
+        stream_with_context(stix2_bundle_formatter(feedname, objectid='')),
         mimetype='application/vnd.oasis.stix+json; version=2.0'
     )
