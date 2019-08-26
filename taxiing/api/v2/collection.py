@@ -60,7 +60,7 @@ def response_formatter(feedname, objectid='', manifest=False):
                 ('minemeld/{}/{}'.format(feedname, score)).encode('ascii', 'ignore')
             ))
 
-        yield '{{\n"type": "bundle",\n"spec_version": "2.0",\n"id": "bundle--{}",\n"indicators": [\n'.format(bundle_id)
+        yield '{{\n"type": "bundle",\n"spec_version": "2.0",\n"id": "bundle--{}",\n"objects": [\n'.format(bundle_id)
 
     else:
         yield '{\n"objects": [\n'
